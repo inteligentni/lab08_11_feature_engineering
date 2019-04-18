@@ -1,0 +1,6 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+/data/train_new.RData
+/data/test_new.RData
