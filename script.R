@@ -246,133 +246,177 @@ titanic.all$AgeGender[ titanic.all$Title %in% girls ] <- "Girls"
 titanic.all$AgeGender[ titanic.all$Title %in% boys ] <- "Boys" 
 
 # print the contingency table for the AgeGender values
-
+table(titanic.all$AgeGender)
 
 # plot the distribution of Girls for different Age values 
-
+ggplot(titanic.all[titanic.all$AgeGender=="Girls",], aes(x = Age)) + 
+  geom_density() + 
+  theme_bw()
 
 # plot the distribution of AdultMen for different Age values 
-
+ggplot(titanic.all[titanic.all$AgeGender=="AdultMen", ], aes(x = Age)) + 
+  geom_density() + 
+  scale_x_continuous(breaks = seq(5,80,5)) +
+  theme_bw()
 
 # print the number of Girls who has the Age value set
-
+nrow(titanic.all[titanic.all$AgeGender=="Girls" & !is.na(titanic.all$Age),])
 
 # set the AgeGender to 'AdultWomen' for all 'girls' with age over 18
-
+titanic.all$AgeGender[titanic.all$AgeGender=="Girls" & 
+                        !is.na(titanic.all$Age) & 
+                        titanic.all$Age >= 18] <- "AdultWomen"
 
 # print the number of AdultMen who has the Age value set
-
+nrow(titanic.all[titanic.all$AgeGender=="AdultMen" & !is.na(titanic.all$Age),])
 
 # set the AgeGender to 'Boys' for all 'AdultMen' with age under 18
-
+titanic.all$AgeGender[titanic.all$AgeGender=="AdultMen" &
+                        !is.na(titanic.all$Age) & 
+                        titanic.all$Age < 18] <- "Boys"
 
 # print the contingency table for the AgeGender variable
-
+table(titanic.all$AgeGender)
 
 # print the proportions table for the AgeGender variable
-
+round(prop.table(table(titanic.all$AgeGender)), digits = 2)
 
 # transform the AgeGender to factor
-
+titanic.all$AgeGender <- factor(titanic.all$AgeGender)
+summary(titanic.all$AgeGender)
 
 # plot the AgeGender against Survived attribute
-
+ggplot(titanic.all[1:891,], aes(x = AgeGender, fill=Survived)) +
+  geom_bar(position = "dodge") + 
+  theme_bw()
 
 # calculate the proportions for AgeGender and Survived values
-
+age.gen.surv.tbl <- prop.table(table(AgeGender = titanic.all$AgeGender[1:891],
+                                     Survived = titanic.all$Survived[1:891]), 
+                               margin = 1)
+age.gen.surv.tbl
 
 # transform the proportions table in a dataframe
-
+age.gen.surv.df <- as.data.frame(age.gen.surv.tbl)
+age.gen.surv.df
 
 # plot the AgeGender vs. Freq vs. Survived
-
+ggplot(age.gen.surv.df, aes(x = AgeGender, y = Freq, fill=Survived)) +
+  geom_col(position = "dodge", width = 0.5) + 
+  ylab("Proportion") +
+  theme_bw()
 
 ##################################
 ## Creating FamilySize variable
 ##################################
 
 # print the summary of the SibSp variable
-
+summary(titanic.all$SibSp)
 
 # print the summary of the SibSp Parch
-
+summary(titanic.all$Parch)
 
 # create a new variable FamilySize based on the SibSp and Parch values
-
+titanic.all$FamilySize <- titanic.all$SibSp + titanic.all$Parch
+summary(titanic.all$FamilySize)
 
 # print the contingency table for the FamilySize
-
+table(titanic.all$FamilySize)
 
 # print the proportion of FamilySize >= 3 in all passangers
-
+length(which(titanic.all$FamilySize>=3))/length(titanic.all$FamilySize)
 
 # set the FamilySize to 3 to all observations where FamilySize > 3
-
+titanic.all$FamilySize[titanic.all$FamilySize > 3] <- 3
 
 # transform FamilySize into factor
-
+titanic.all$FamilySize <- factor(titanic.all$FamilySize, 
+                                 levels = c(0,1,2,3), 
+                                 labels = c("0", "1", "2", "3+"))
+table(titanic.all$FamilySize)
 
 # plot the FamilySize vs. Survived
-
+ggplot(titanic.all[1:891,], aes(x = FamilySize, fill = Survived)) + 
+  geom_bar(position = "dodge", width = 0.5) + 
+  theme_light()
 
 #####################################
 ## Making use of the Ticket variable
 #####################################
 
 # print the sample for the Ticket variable
-
+titanic.all$Ticket[1:20]
 
 # print the unique values of the Ticket variable
-
+length(unique(titanic.all$Ticket))
 
 # use tapply to compute the number of occurrences of each unique Ticket value 
-
+ticket.count <- tapply(titanic.all$Ticket,
+                       INDEX = titanic.all$Ticket,
+                       FUN = function(x) sum( !is.na(x) ))
 
 # create a data frame with ticket name and ticket count as variable
-
+ticket.count.df <- data.frame(ticket=names(ticket.count), 
+                              count=as.integer(ticket.count))
 
 # print a sample of the values from the new data frame
-
+head(ticket.count.df)
 
 # print the contingency table of the count variable
-
+table(ticket.count.df$count)
 
 # merge titanic.all and ticket.count.df datasets on the Ticket variable
-
+titanic.all <- merge(x = titanic.all, y = ticket.count.df,
+                     by.x = "Ticket", by.y = "ticket",
+                     all.x = TRUE, all.y = TRUE)
 
 # change the name of the newly added column to PersonPerTicket
-
+colnames(titanic.all)[16] <- "PersonPerTicket"
 
 # set the PersonPerTicket to 3 to all observations where PersonPerTicket > 3
-
+titanic.all$PersonPerTicket[titanic.all$PersonPerTicket > 3] <- 3
 
 # convert PersonPerTicket to factor
-
+titanic.all$PersonPerTicket <- factor(titanic.all$PersonPerTicket, 
+                                      levels = c(1,2,3), 
+                                      labels = c("1", "2", "3+"))
 
 # print the contingency table for the PersonPerTicket
-
+table(titanic.all$PersonPerTicket)
 
 # print the contingency table for the PersonPerTicket vs. FamilySize
-
+xtabs(~ PersonPerTicket + FamilySize, data = titanic.all)
 
 # plot all survived passangers (without NAs)
-
+ggplot(titanic.all[!is.na(titanic.all$Survived),], aes(x = PersonPerTicket, fill=Survived)) + 
+  geom_bar(position = "dodge", width = 0.5) + 
+  theme_light()
 
 # calculate the proportions of the PersonPerTicket vs. Survived table
-
+tcount.surv.tbl <- prop.table(table(PersonPerTicket = titanic.all$PersonPerTicket,
+                                    Survived = titanic.all$Survived, 
+                                    useNA = "no"), 
+                              margin = 1)
+tcount.surv.tbl
 
 # convert the table into a data frame
-
+tcount.surv.df <- as.data.frame(tcount.surv.tbl)
+tcount.surv.df
 
 # plot the PersonPerTicket vs. Freq barchart, split based on the Survived attribute
-
+ggplot(tcount.surv.df, aes(x = PersonPerTicket, y = Freq*100, fill=Survived)) +
+  geom_col(width = 0.5, position = "dodge") + 
+  theme_light() + 
+  ylab("Percentage")
 
 ##################################
 # Save the augmented data set
 ##################################
 
 # split into train and test set based on whether the Survived is present
-
+ttrain.new <- titanic.all[!is.na(titanic.all$Survived),]
+ttest.new <- titanic.all[is.na(titanic.all$Survived),]
 
 # save both data sets to a file
-
+saveRDS(ttrain.new, file = "data/train_new.RData")
+saveRDS(ttest.new, file = "data/test_new.RData")
