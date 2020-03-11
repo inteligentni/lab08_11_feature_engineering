@@ -28,10 +28,10 @@
 # number of observations with empty Cabin variable
 
 
-# get indices of observations with no Cabin set from the first class, in the train set
+# get indices of observations with no Cabin value from the first class, in the train set
 
 
-# get indices of observations with no Cabin set from the first class, in the train set
+# get indices of observations with no Cabin value from the first class, in the test set
 
 
 # set the Cabin value for identified passangers to NA in the train and test sets
@@ -40,25 +40,26 @@
 # print the number of missing Cabin values in the train and test sets
 
 
-# test for empty values in string variables in the train set 
+# checking the presence of empty strings in character variables in the train set
 
 
-# test for empty values in string variables in the test set 
+# do the same in the test set 
 
 
 # set the empty Embarked values to NA in the train set
 
 
+#install.packages('Amelia')
 # load Amelia library
 
 
 # set the display area to show two plots in the same row 
 
 
-# print the missmap for the train set
+# # use the missmap f. to visualise the missing data in the train set
 
 
-# print the missmap for the test set
+# use the missmap f. to visualise the missing data in the test set
 
 
 # revert the plotting area to the default (one plot per row)
@@ -75,7 +76,7 @@
 # get the number of unique values for the Embarked variable in both sets
 
 
-# print the contingency table for the values of the Embarked variable
+# create the contingency table for the values of the Embarked variable
 
 
 # replace all NA values for the Embarked variable with 'S' in the train set
@@ -85,6 +86,7 @@
 
 
 # transform the Embarked variable into a factor in both sets
+
 
 
 ###############################################################
@@ -117,16 +119,16 @@
 # transofrm the Sex variable into factor
 
 
-# print the summary of the Sex variable
+# get the summary of the Sex variable
 
 
-# print the proportions table of the Sex variable
+# compute the proportions table of the Sex variable
 
 
-# print the contingency table for Sex vs. Survived
+# create a contingency table for Sex vs. Survived
 
 
-# print the proportions of the contingency table for Sex vs. Survived
+# compute the proportions for Sex vs. Survived
 
 
 # transform the Survived variable into factor
@@ -154,7 +156,8 @@
 # transform the Pclass variable into factor (in the test set)
 
 
-# transform the Set variable into factor (in the test set)
+
+# transform the Sex variable into factor (in the test set)
 
 
 # transform the Embarked variable into factor (in the test set)
@@ -188,46 +191,49 @@
 # print the contingency table for the Title values
 
 
-# create a vector of all women titles
+# create a vector of all women (adult female) titles
 adult.women <- c("Dona", "Lady", "Mme", "Mrs", "the Countess")
 
-# create a vector of all girl titles
+# create a vector of all girl (young female) titles
 girls <- c("Ms", "Mlle", "Miss")
 
-# create a vector of all men titles
+# create a vector of all men (adult male) titles
 adult.men <- c("Capt", "Col", "Don", "Dr", "Major", "Mr", "Rev", "Sir")
 
-# create a vector of all boy titles
+# create a vector of all boy (young male) titles
 boys <- c("Master", "Jonkheer")
 
 # introduce a new character variable AgeGender
 
 
 # set the AgeGender value based on the vector the Title value belongs to
- 
+
+
 
 # print the contingency table for the AgeGender values
 
 
-# plot the distribution of Girls for different Age values 
+# plot the distribution of the Age attribute in the Young_Female group
 
 
-# plot the distribution of AdultMen for different Age values 
+# plot the distribution of the Age attribute in the Adult_Male group
 
 
-# print the number of Girls who has the Age value set
+# print the number of young females who has the Age value set
 
 
-# set the AgeGender to 'AdultWomen' for all 'girls' with age over 18
+# set the AgeGender to 'Adult_Female' for all 'girls' with age over 18
 
 
-# print the number of AdultMen who has the Age value set
+
+# print the number of adult males who has the Age value set
 
 
-# set the AgeGender to 'Boys' for all 'AdultMen' with age under 18
+# set the AgeGender to 'Young_Male' for all 'Adult_Male' with age under 18
 
 
-# print the contingency table for the AgeGender variable
+
+# create the contingency table for the AgeGender variable
 
 
 # print the proportions table for the AgeGender variable
@@ -245,17 +251,22 @@ boys <- c("Master", "Jonkheer")
 # transform the proportions table in a dataframe
 
 
-# plot the AgeGender vs. Freq vs. Survived
+# change the name of the last column to better reflect its meaning
 
 
-##################################
-## Creating FamilySize variable
-##################################
-
-# print the summary of the SibSp variable
+# plot the AgeGender vs. Proportion vs. Survived
 
 
-# print the summary of the SibSp Parch
+###################################
+## Creating the FamilySize variable
+###################################
+
+# examine the values of the SibSp variable
+
+
+
+# examine the values of the Parch variable
+
 
 
 # create a new variable FamilySize based on the SibSp and Parch values
@@ -264,13 +275,14 @@ boys <- c("Master", "Jonkheer")
 # print the contingency table for the FamilySize
 
 
-# print the proportion of FamilySize >= 3 in all passangers
+# compute the proportion of FamilySize >= 3 in all passangers
 
 
 # set the FamilySize to 3 to all observations where FamilySize > 3
 
 
 # transform FamilySize into factor
+
 
 
 # plot the FamilySize vs. Survived
@@ -280,25 +292,27 @@ boys <- c("Master", "Jonkheer")
 ## Making use of the Ticket variable
 #####################################
 
-# print the sample for the Ticket variable
+# print a sample of Ticket values
 
 
-# print the unique values of the Ticket variable
+# compute the number of distinct values of the Ticket variable
 
 
 # use tapply to compute the number of occurrences of each unique Ticket value 
 
 
-# create a data frame with ticket name and ticket count as variable
+
+# create a data frame with ticket name and ticket count as variables
 
 
-# print a sample of the values from the new data frame
+# print first few rows of the new data frame
 
 
 # print the contingency table of the count variable
 
 
 # merge titanic.all and ticket.count.df datasets on the Ticket variable
+
 
 
 # change the name of the newly added column to PersonPerTicket
@@ -319,13 +333,18 @@ boys <- c("Master", "Jonkheer")
 # plot all survived passangers (without NAs)
 
 
+
 # calculate the proportions of the PersonPerTicket vs. Survived table
+
 
 
 # convert the table into a data frame
 
 
-# plot the PersonPerTicket vs. Freq barchart, split based on the Survived attribute
+# change the name of the last column to better reflect its meaning
+
+
+# plot the PersonPerTicket vs. Proportion barchart, split based on the Survived attribute
 
 
 ##################################

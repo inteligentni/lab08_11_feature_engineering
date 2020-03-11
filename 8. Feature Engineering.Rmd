@@ -1,6 +1,7 @@
 ---
 title: "Data preparation and feature engineering"
 output:
+  word_document: default
   pdf_document: default
 urlcolor: blue
 ---
@@ -30,7 +31,7 @@ str(titanic.train)
 str(titanic.test)
 ```
 
-The structure of the training and test sets is almost exactly the same (as expected). In fact, the only difference is the *Survived* column that is present in the training, but absent in the test set - it is the response (outcome) variable, that is, the variable with the class values.
+The structure of the training and test sets is almost exactly the same (as expected). In fact, the only difference is the *Survived* column that is present in the training, but absent in the test set - it is the response (outcome) variable.
 
 # Detecting missing values
 
@@ -68,14 +69,14 @@ Recall that on Titanic, there were three classes of passengers, and only those f
 However, passengers from the 1st class should have had a cabin. So, an empty string for the *Cabin* value of a 1st class passenger is a 'real' missing value. Let's check how many such values we have in the training set.
 
 ```{r}
-# get indices of observations with no Cabin set from the first class, in the train set
+# get indices of observations with no Cabin value from the first class, in the train set
 train.class1.no.cabin <- which(titanic.train$Pclass==1 & titanic.train$Cabin=="")
 length(train.class1.no.cabin)
 ```
 
 Also, on the test set:
 ```{r}
-# get indices of observations with no Cabin set from the first class, in the train set
+# get indices of observations with no Cabin value from the first class, in the test set
 test.class1.no.cabin <- which(titanic.test$Pclass==1 & titanic.test$Cabin=="")
 length(test.class1.no.cabin)
 ```
@@ -99,7 +100,7 @@ length(which(is.na(titanic.test$Cabin)))
 Note that we have discovered missing values of the *Cabin* variable by spotting a few empty strings in the output of the *str* function. However, if those values were not amongst the first couple of values listed by *str*, they would have passed unnoticed. So, let's check other string variables for missing values 'hidden' as empty strings.
 
 ```{r}
-# test for empty values in string variables in the train set 
+# check for the presence of empty strings in character variables in the train set 
 apply(X = titanic.train[,c("Name","Sex","Ticket","Embarked")],
       MARGIN = 2,
       FUN = function(x) length(which(x=="")))
@@ -108,7 +109,7 @@ apply(X = titanic.train[,c("Name","Sex","Ticket","Embarked")],
 In the training set, only for the Embarked variable, we have 2 missing values. 
 
 ```{r}
-# test for empty values in string variables in the test set 
+# check for the presence of empty strings in character variables in the test set 
 apply(X = titanic.test[,c("Name","Sex","Ticket","Embarked")],
       MARGIN = 2,
       FUN = function(x) length(which(x=="")))
@@ -137,26 +138,26 @@ We will use the *missmap* function to plot the missing data from the training an
 # set the display area to show two plots in the same row 
 par(mfrow=c(1,2))
 
-# print the missmap for the train set
+# use the missmap f. to visualise the missing data in the train set
 missmap(obj = titanic.train, main = "Training set", legend = FALSE)
 
-# print the missmap for the test set
+# use the missmap f. to visualise the missing data in the test set
 missmap(obj = titanic.test, main = "Test set", legend = FALSE)
 
 # revert the plotting area to the default (one plot per row)
 par(mfrow=c(1,1)) 
 ```
 
-**Note:** the detection of missing values in the *missmap* function is based on the NA values; so, if we hadn't transformed those empty strings (for *Cabin* and *Embarked*) into NAs, they wouldn't be visualized as missing.
+**Note:** the detection of missing values in the *missmap* function is based on the NA values; so, if we hadn't transformed empty strings (in *Cabin* and *Embarked* columns) into NAs, they wouldn't be visualized as missing.
 
 
 # Handling missing values
 
-Let's now see how to deal with missing values. We'll start with those cases that are easier to deal with, that is, variables where we have just a few missing values. 
+Let's now deal with missing values. We'll start with those cases that are easier to deal with, that is, variables where we have just a few missing values. 
 
 ## Categorical variables with a small number of missing values
 
-In our datasets, *Embarked* variable is a categorical (factor) variable
+In our datasets, *Embarked* variable is a categorical (factor) variable.
 ```{r}
 # get the number of unique values for the Embarked variable in both sets
 unique(titanic.train$Embarked)
@@ -168,7 +169,7 @@ So, as we see, *Embarked* is essentially a nominal (categorical) variable with 3
 In a situation like this, the missing values are replaced by the 'majority class', that is, the most dominant value.
 
 ```{r}
-# print the contingency table for the values of the Embarked variable
+# create the contingency table for the values of the Embarked variable
 xtabs(~Embarked, data = titanic.train)
 ```
 
@@ -194,9 +195,9 @@ titanic.test$Embarked <- factor(titanic.test$Embarked)
 
 In our data set, *Fare* variable belongs to this category - it is a numerical variable with 1 missing value (in the test set).
 
-A typical way to deal with missing values in situations like this is to replace them with the average value of the variable on a subset of observations that are the closest (most similar) to the observation(s) with the missing value. One way to do this is to apply the **kNN** method.
+A typical way to deal with missing values in situations like this is to replace them with the average value of the variable on a subset of observations that are the closest (most similar) to the observation(s) with the missing value. One way to do find the most similar observations is to apply the **kNN** method.
 
-However, we can opt for a simpler approach: we will replace the missing *Fare* value with the average *Fare* value for the passengers of the same class (*Pclass*).   
+However, we will opt here for a simpler approach: we will replace the missing *Fare* value with the average *Fare* value for the passengers of the same class (*Pclass*).   
 
 First, we need to check the distribution of the *Fare* variable, to decide if we should use mean or median as the average value.
 
@@ -239,23 +240,23 @@ summary(titanic.test$Fare)
 
 ## Variables with many missing values and/or missing values that are difficult to replace
 
-The *Age* variable is an example of the first type: variable with much missing values; *Cabin* is an example of the second type, as it is a categorical variable with many different values (~150)
+The *Age* variable is an example of the first type: variable with many missing values; *Cabin* is an example of the second type, as it is a categorical variable with many different values (~150)
 
-For such variables we apply the process known as *imputation* - the process of replacing missing values with substituted (predicted) values. It is, in fact, the task of predicting (good substitutes for) the missing values. R has several packages for imputation: [MICE](https://cran.r-project.org/web/packages/mice/index.html), [Amelia](https://cran.r-project.org/web/packages/Amelia/index.html), [HMisc](https://cran.r-project.org/web/packages/Hmisc/index.html),...
+For such variables the replacement of missing values is done through a process known as *imputation* - the process of replacing missing values with substituted (predicted) values. It is, in fact, the task of predicting (good substitutes for) the missing values. R has several packages for imputation: [MICE](https://cran.r-project.org/web/packages/mice/index.html), [Amelia](https://cran.r-project.org/web/packages/Amelia/index.html), [HMisc](https://cran.r-project.org/web/packages/Hmisc/index.html),...
 
-We are not going to do imputation (out of the scope of this course), but will instead create new variables (features) that will, in a way, serve as substitutes or proxies for *Age* and *Cabin*.
+We are not going to do imputation (out of the scope of this course), but will instead create new variables (features) that will, in a way, serve as substitutes or proxies for *Age* and *Cabin*. This will be covered a bit later in the section on *Feature engineering*.
 
 # Feature selection
 
 To select features to be used for creating a prediction model, we have to examine if and to what extent they are associated with the response (outcome) variable.
 
-If we are familiar with the domain of the problem (prediction task), we can start from the knowledge and/or intuition about the predictors. Otherwise, that is, if the domain is unknown to us (such as would be prediction of the outcome of some chemical reactions) or the real names (labels) of the variables are withdrawn (e.g. for privacy reasons), we have to rely on some well establish general methods for feature selection (such as forward or backward selection).
+If we are familiar with the domain of the problem (prediction task), we can start from the knowledge and/or intuition about the predictors. Otherwise, that is, if the domain is unknown to us (for example, predictions related to some chemical reactions) or the real names (labels) of the variables are withdrawn (e.g. for privacy reasons), we have to rely on some well establish general methods for feature selection (such as forward or backward selection).
 
 Since the Titanic data set is associated with a familiar domain, we can start from some intuition about potential predictors.  
 
 ## Examining the predictive power of variables from the data set
 
-It's well-known that in disasters woman and children are often the first to be rescued. Let's check if that was the case in the Titanic disaster. We'll start by looking at the survival based on gender.
+It's well-known that in disasters woman and children are often the first to be rescued. Let's check if that was the case in the Titanic case. We'll start by looking at the survival based on gender.
 
 First, let's see the proportion of males and females in the dataset.
 
@@ -263,17 +264,17 @@ First, let's see the proportion of males and females in the dataset.
 # transofrm the Sex variable into factor
 titanic.train$Sex <- factor(titanic.train$Sex)
 
-# print the summary of the Sex variable
+# get the summary of the Sex variable
 summary(titanic.train$Sex)
 
-# print the proportions table of the Sex variable
+# compute the proportions table of the Sex variable
 prop.table(summary( titanic.train$Sex ))
 ```
 
 Now, examine the survival counts based on the sex.
 
 ```{r}
-# print the contingency table for Sex vs. Survived
+# create a contingency table for Sex vs. Survived
 sex.survived.counts <- xtabs(~Sex + Survived, data = titanic.train)
 sex.survived.counts
 ```
@@ -281,7 +282,7 @@ sex.survived.counts
 Get the proportions.
 
 ```{r}
-# print the proportions of the contingency table for Sex vs. Survived
+# compute the proportions for Sex vs. Survived
 sex.surv.tbl <- prop.table(sex.survived.counts, 
                            margin = 1) # proportions are computed at the row level (each row sums to 1)
 sex.surv.tbl
@@ -311,7 +312,7 @@ titanic.train$Pclass <- factor(titanic.train$Pclass,
 ```
 
 ```{r}
-# plot the number of passengers for different classes and Survived values
+# plot the number of passengers in different classes and Survived values
 gp1 <- ggplot(titanic.train, aes(x = Pclass, fill=Survived)) +
   geom_bar(position = "dodge", width = 0.4) +
   ylab("Number of passengers") + 
@@ -338,7 +339,7 @@ gp3 <- ggplot(titanic.train, aes(x = Embarked, fill = Survived)) +
   geom_bar(position = "dodge", width = 0.45) +
   ylab("Number of passengers") + 
   xlab("Place of embarkment") +
-  theme_bw()
+  theme_bw() 
 gp3
 ```
 
@@ -348,7 +349,7 @@ It seems that those who embarked in Cherbourg had a higher chance of surviving t
 
 When creating new features (attributes) to be used for prediction purposes, we need to base those features on the data from both the training and the test sets, so that the features are available both for training the prediction model and making predictions on the unseen test data.
 
-Hence, we should merge the training and the test sets and develop new features on the merged data.
+Hence, we will merge the training and the test sets and develop new features on the merged data.
 
 But before we do that, we need to assure that the training and the test sets have exactly the same structure. To that end, we will first add the *Survived* column to the test data, as a factor variable with the same levels as in the training set.
 
@@ -364,7 +365,7 @@ Next, we need to transform the *Pclass*, *Sex*, and *Embarked* variables in the 
 titanic.test$Pclass <- factor(x = titanic.test$Pclass, 
                               levels = c(1,2,3), labels = c("1st", "2nd", "3rd"))
 
-# transform the Set variable into factor (in the test set)
+# transform the Sex variable into factor (in the test set)
 titanic.test$Sex <- factor(titanic.test$Sex)
 
 # transform the Embarked variable into factor (in the test set)
@@ -382,7 +383,7 @@ titanic.all <- rbind(titanic.train, titanic.test)
 
 Recall that the *Age* variable has a lot of missing values, and simple imputation methods we considered cannot be used in such cases. So, we will create a new variable that approximates the passengers' age group. We'll do that by making use of the *Name* variable.
 
-To start, let's first inspect the values of this variable.
+To start, let's first inspect values of the Name variable.
 
 ```{r}
 # print a sample of the Name variable
@@ -417,7 +418,7 @@ unlist(strsplit(x = titanic.all$Name[1], split = "[,|.]"))[2]
 You might have noticed a space before the title, we'll remove that quickly, but before that, we'll apply this procedure to all the rows in the titanic.all dataset to create a new feature:
 
 ```{r}
-# create a variable Title based on the value of the Name variable 
+# create a new variable - Title - based on the value of the Name variable 
 titanic.all$Title <- sapply(titanic.all$Name, 
                             FUN = function(x) unlist(strsplit(x, split = "[,|.]"))[2] )
 ```
@@ -436,19 +437,19 @@ We can now inspect different kinds of titles we have in the dataset.
 table(titanic.all$Title)
 ```
 
-There are some rarely occurring titles that won't be much useful for creating a model; so, we'll aggregate those titles into broader categories that represent some basic age-gender groups:
+There are some rarely occurring titles that won't be useful for creating a model; so, we'll aggregate those titles into broader categories that represent some basic age-gender groups:
 
 ```{r}
-# create a vector of all women titles
+# create a vector of all women (adult female) titles
 adult.women <- c("Dona", "Lady", "Mme", "Mrs", "the Countess")
 
-# create a vector of all girl titles
+# create a vector of all girl (young female) titles
 girls <- c("Ms", "Mlle", "Miss")
 
-# create a vector of all men titles
+# create a vector of all men (adult male) titles
 adult.men <- c("Capt", "Col", "Don", "Dr", "Major", "Mr", "Rev", "Sir")
 
-# create a vector of all boy titles
+# create a vector of all boy (young male) titles
 boys <- c("Master", "Jonkheer")
 ```
 
@@ -463,10 +464,10 @@ and, now define each age-gender group using the Title groupings we defined above
 
 ```{r}
 # set the AgeGender value based on the vector the Title value belongs to
-titanic.all$AgeGender[ titanic.all$Title %in% adult.women ] <- "AdultWomen"
-titanic.all$AgeGender[ titanic.all$Title %in% adult.men ] <- "AdultMen" 
-titanic.all$AgeGender[ titanic.all$Title %in% girls ] <- "Girls" 
-titanic.all$AgeGender[ titanic.all$Title %in% boys ] <- "Boys" 
+titanic.all$AgeGender[ titanic.all$Title %in% adult.women ] <- "Adult_Female"
+titanic.all$AgeGender[ titanic.all$Title %in% adult.men ] <- "Adult_Male" 
+titanic.all$AgeGender[ titanic.all$Title %in% girls ] <- "Young_Female" 
+titanic.all$AgeGender[ titanic.all$Title %in% boys ] <- "Young_Male" 
 ```
 
 **Note**: the *%in%* operator checks to see if a value is an element of the given vector.
@@ -478,61 +479,61 @@ Let's see how passengers are distributed across our age-gender groups:
 table(titanic.all$AgeGender)
 ```
 
-We observe a high disproportion in the number of boys and girls, and man and woman. Let's take a closer look at the groups with an unexpectedly high number of passengers, namely *Girls* and *AdultMen* groups.
+We observe a high disproportion in the number of boys and girls, and man and woman. Let's take a closer look at the groups with an unexpectedly high number of passengers, namely *Young_Female* and *Adult_Male* groups.
 
-We'll make use of the available values of the *Age* variable to see how our *Girls* group is distributed with respect age.
+We'll make use of the available values of the *Age* variable to see how our *Young_Female* group is distributed with respect age.
 
 ```{r}
-# plot the distribution of Girls for different Age values 
-ggplot(titanic.all[titanic.all$AgeGender=="Girls",], aes(x = Age)) + 
+# plot the distribution of the Age attribute in the Young_Female group
+ggplot(titanic.all[titanic.all$AgeGender=="Young_Female",], aes(x = Age)) + 
   geom_density() + 
   theme_bw()
 ```
 
-It is obvious from the graph that the *Girls* group includes a considerable number of adult women. We'll need to fix this. But before that, let's also inspect the *AdultMen* group.
+It is obvious from the graph that the *Young_Female* group includes a considerable number of adult women. We'll need to fix this. But before that, let's also inspect the *Adult_Male* group.
 
 ```{r}
-# plot the distribution of AdultMen for different Age values 
-ggplot(titanic.all[titanic.all$AgeGender=="AdultMen", ], aes(x = Age)) + 
+# plot the distribution of the Age attribute in the Adult_Male group
+ggplot(titanic.all[titanic.all$AgeGender=="Adult_Male", ], aes(x = Age)) + 
   geom_density() + 
   scale_x_continuous(breaks = seq(5,80,5)) +
   theme_bw()
 ```
 
-From this plot, we can see that the *AdultMen* group also includes some males who cannot be qualified as adults. 
+From this plot, we can see that the *Adult_Male* group also includes some males who cannot be qualified as adults. 
 
 We will try to fix both problems using the available values of the *Age* variable.
 
-First, let's check for how many passengers in the 'Girls' group the *Age* value is available.
+First, let's check for how many passengers in the 'Young_Female' group the *Age* value is available.
 
 ```{r}
-# print the number of Girls who has the Age value set
-nrow(titanic.all[titanic.all$AgeGender=="Girls" & !is.na(titanic.all$Age),])
+# print the number of young females who has the Age value set
+nrow(titanic.all[titanic.all$AgeGender=="Young_Female" & !is.na(titanic.all$Age),])
 ```
 
-So, we have *Age* value for 213 out of 264 Girls, which is not bad at all (80%). We'll make use of these available *Age* values to move some *Girls* to *AdultWomen* group, using 18 years of age as the threshold.
+So, we have *Age* value for 213 out of 264 Girls, which is not bad at all (80%). We'll make use of these available *Age* values to move some *Young_Female* to *Adult_Female* group, using 18 years of age as the threshold.
 
 ```{r}
-# set the AgeGender to 'AdultWomen' for all 'girls' with age over 18
-titanic.all$AgeGender[titanic.all$AgeGender=="Girls" & 
+# set the AgeGender to 'Adult_Female' for all 'girls' with age over 18
+titanic.all$AgeGender[titanic.all$AgeGender=="Young_Female" & 
                         !is.na(titanic.all$Age) & 
-                        titanic.all$Age >= 18] <- "AdultWomen"
+                        titanic.all$Age >= 18] <- "Adult_Female"
 ```
 
-We'll do a similar thing for the *AdultMen* group. First, check the number of *AdultMen* passengers for whom age is available.
+We'll do a similar thing for the *Adult_Male* group. First, check the number of *Adult_Male* passengers for whom age is available.
 
 ```{r}
-# print the number of AdultMen who has the Age value set
-nrow(titanic.all[titanic.all$AgeGender=="AdultMen" & !is.na(titanic.all$Age),])
+# print the number of adult males who has the Age value set
+nrow(titanic.all[titanic.all$AgeGender=="Adult_Male" & !is.na(titanic.all$Age),])
 ```
 
-We have *Age* value for 605 out of 782 *AdultMen* passengers (77%). Let's make use of those values to move some passengers from *AdultMen* to *Boys* group using, again, the 18 year threshold.
+We have *Age* value for 605 out of 782 *AdultMen* passengers (77%). Let's make use of those values to move some passengers from *Adult_Male* to *Young_Male* group using, again, the 18 year threshold.
 
 ```{r}
-# set the AgeGender to 'Boys' for all 'AdultMen' with age under 18
-titanic.all$AgeGender[titanic.all$AgeGender=="AdultMen" & 
+# set the AgeGender to 'Young_Male' for all 'Adult_Male' with age under 18
+titanic.all$AgeGender[titanic.all$AgeGender=="Adult_Male" & 
                         !is.na(titanic.all$Age) & 
-                        titanic.all$Age < 18] <- "Boys"
+                        titanic.all$Age < 18] <- "Young_Male"
 ```
 
 Let's check the *AgeGender* proportions after these modifications.
@@ -559,7 +560,7 @@ Let's see if our efforts in creating the *AgeGender* variable were worthwhile, t
 ```{r}
 # plot the AgeGender against Survived attribute
 ggplot(titanic.all[1:891,], aes(x = AgeGender, fill=Survived)) +
-  geom_bar(position = "dodge") + 
+  geom_bar(position = "dodge", width = 0.65) + 
   theme_bw()
 ```
 
@@ -575,7 +576,7 @@ age.gen.surv.tbl <- prop.table(table(AgeGender = titanic.all$AgeGender[1:891],
 age.gen.surv.tbl
 ```
 
-Note that we are setting the margin parameter to 1 as we want to have percentages of survived and not-survived (column values) computed for each AgeGender group (row) individually. Try setting the margin to 2 and not setting it at all to observe the effect. 
+Note that we are setting the margin parameter to 1 as we want to have proportions of survived and not-survived (column values) computed for each AgeGender group (row) individually. Try setting the margin to 2 and not setting it at all to observe the effect. 
 
 For plotting, we'll transform the table into a data frame.
 
@@ -588,16 +589,21 @@ age.gen.surv.df
 Note the difference in the structure of the table and the data frame.
 
 ```{r}
-# plot the AgeGender vs. Freq vs. Survived
-ggplot(age.gen.surv.df, aes(x = AgeGender, y = Freq, fill=Survived)) +
+# change the name of the last column to better reflect its meaning
+colnames(age.gen.surv.df)[3] <- "Proportion"
+```
+
+
+```{r}
+# plot the AgeGender vs. Proportion vs. Survived
+ggplot(age.gen.surv.df, aes(x = AgeGender, y = Proportion, fill=Survived)) +
   geom_col(position = "dodge", width = 0.5) + 
-  ylab("Proportion") +
   theme_bw()
 ```
 
-Obviously, the age/gender group affects survival.
+Obviously, the age/gender group is a strong predictor of survival.
 
-## Creating FamilySize variable
+## Creating the FamilySize variable
 
 Recall that we have two variable related to the number of family members one is traveling with: 
 
@@ -606,16 +612,20 @@ Recall that we have two variable related to the number of family members one is 
 * *Parch* - the number of parents and children one is traveling with 
 
 ```{r}
-# print the summary of the SibSp variable
+# examine the values of the SibSp variable
 summary(titanic.all$SibSp)
+
+table(titanic.all$SibSp)
 ```
 
 ```{r}
-# print the summary of the SibSp Parch
+# examine the values of the Parch variable
 summary(titanic.all$Parch)
+
+table(titanic.all$Parch)
 ```
 
-To get a better insight into the number of family members passengers were traveling with, we'll create a new variable *FamilySize* by simply adding the value of the *SibSp* and *Parch* variables.
+To make it easier to keep track of the number of family members one was traveling with, we'll create a new variable *FamilySize* by simply adding the value of the *SibSp* and *Parch* variables.
 
 ```{r}
 # create a new variable FamilySize based on the SibSp and Parch values
@@ -633,11 +643,11 @@ table(titanic.all$FamilySize)
 It can be also observed that those who traveled with 3+ family members were not that numerous.
 
 ```{r}
-# print the proportion of FamilySize >= 3 in all passangers
-length(which(titanic.all$FamilySize>=3))/length(titanic.all$FamilySize)
+# compute the proportion of FamilySize >= 3 in all passangers
+sum(titanic.all$FamilySize>=3)/length(titanic.all$FamilySize)
 ```
 
-Only 10% of passengers traveled with 3+ family members.
+Less than 10% of passengers traveled with 3+ family members.
 
 In situations like this - several values of a variable spread across a small proportion of the observations - it is recommended to aggregate those values. We'll apply that practice to the FamilySize variable and aggregate observations with 3+ family members.
 
@@ -671,18 +681,18 @@ We can see that those who traveled with 1 or 2 family members had better prospec
 Let's examine the *Ticket* variable and see if we can make some use of it.
 
 ```{r}
-# print the sample for the Ticket variable
+# print a sample of Ticket values
 titanic.all$Ticket[1:20]
 ```
 
 We can observe that some tickets start with letters, while others consist of digits only.
 
 ```{r}
-# print the unique values of the Ticket variable
+# compute the number of distinct values of the Ticket variable
 length(unique(titanic.all$Ticket))
 ```
 
-929 unique ticket values for 1309 passengers suggests that some passengers were traveling on the same ticket. Let's examine this further as a shared ticket is an indicator that a passenger was not traveling alone, and we saw that the number of people one was traveling with might have had affected their survival prospects.  
+929 unique ticket values for 1309 passengers suggests that some passengers were traveling on the same ticket. Let's examine this further since the presence of shared tickets is an indicator that some passengers were not traveling alone, and we saw that the number of people one was traveling with might have had effect on their survival prospects.  
 
 ```{r}
 # use tapply to compute the number of occurrences of each unique Ticket value 
@@ -690,11 +700,11 @@ ticket.count <- tapply(titanic.all$Ticket,
                        INDEX = titanic.all$Ticket,
                        FUN = function(x) sum( !is.na(x) ))
 
-# create a data frame with ticket name and ticket count as variable
+# create a data frame with ticket name and ticket count as variables
 ticket.count.df <- data.frame(ticket=names(ticket.count), 
                               count=as.integer(ticket.count))
 
-# print a sample of the values from the new data frame
+# print first few rows of the new data frame
 head(ticket.count.df)
 ```
 
@@ -775,13 +785,20 @@ tcount.surv.df
 ```
 
 ```{r}
-# plot the PersonPerTicket vs. Freq barchart, split based on the Survived attribute
-ggplot(tcount.surv.df, aes(x = PersonPerTicket, y = Freq*100, fill=Survived)) +
-  geom_col(width = 0.5, position = "dodge") + 
-  theme_light() + 
-  ylab("Percentage")
+# change the name of the last column to better reflect its meaning
+colnames(tcount.surv.df)[3] <- "Proportion"
 ```
-It seems that this variable can, indeed, be worth including in a prediction model.
+
+
+```{r}
+# plot the PersonPerTicket vs. Proportion barchart, split based on the Survived attribute
+ggplot(tcount.surv.df, aes(x = PersonPerTicket, y = Proportion, fill=Survived)) +
+  geom_col(width = 0.5, position = "dodge") + 
+  theme_light() 
+```
+The proportions of survived and those who did not are very similar for those who travelled on a shared ticket (values 2 and 3+ of the PersonPerTicket variable), but significantly different from those who travelled on a single ticket. So, while not effective as some of the previously considered variables, this variable would be worth including in a prediction model.
+
+**TASK**: Create a binary variable TravelledAlone that would have value TRUE for those who travelled on a single ticket without family members, and FALSE otherwise. Use plots to examine its predictive power.
 
 # Save the augmented data set
 
@@ -789,7 +806,7 @@ Finally, let's split the augmented data set again into training and test parts a
 
 Training observations are those that have the *Survived* value set; test observations have NA value for the *Survived* attribute
 ```{r}
-# split into train and test set based on whether the Survived is present
+# split into train and test sets based on whether the Survived is present
 ttrain.new <- titanic.all[!is.na(titanic.all$Survived),]
 ttest.new <- titanic.all[is.na(titanic.all$Survived),]
 ```
