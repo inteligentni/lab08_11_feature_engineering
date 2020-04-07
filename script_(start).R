@@ -54,14 +54,7 @@
 
 
 # set the display area to show two plots in the same row 
-
-
-# # use the missmap f. to visualise the missing data in the train set
-
-
-# use the missmap f. to visualise the missing data in the test set
-
-
+# use the missmap f. to visualise the missing data in the train and test sets
 # revert the plotting area to the default (one plot per row)
 
 
@@ -96,7 +89,7 @@
 # test the Fare variable for normality
 
 
-# get the class of the observation with missing Fare variable
+# get the passenger class of the observation with the missing Fare value
 
 
 # calculate the median value for the Fare variable of all passangers from the 3rd class
@@ -128,10 +121,13 @@
 # create a contingency table for Sex vs. Survived
 
 
+# transform the Survived variable into factor
+
+
 # compute the proportions for Sex vs. Survived
 
 
-# transform the Survived variable into factor
+# plot the number of passengers for different Sex and Survived values
 
 
 # transform the Pclass variable into factor
@@ -144,6 +140,12 @@
 
 
 # plot the number of passengers for different embarkment places and Survived values
+
+
+# examine the relation between Embarked and Survived, but with proportions
+
+
+# plot the Fare variable against Survived
 
 
 ######################
