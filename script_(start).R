@@ -31,16 +31,13 @@
 # get indices of observations with no Cabin value from the first class, in the train set
 
 
-# get indices of observations with no Cabin value from the first class, in the test set
+# set the Cabin value for identified passengers to NA
 
 
-# set the Cabin value for identified passangers to NA in the train and test sets
+# do the same on the test set
 
 
-# print the number of missing Cabin values in the train and test sets
-
-
-# checking the presence of empty strings in character variables in the train set
+# check the presence of empty strings in character variables in the train set
 
 
 # do the same in the test set 
@@ -92,13 +89,13 @@
 # get the passenger class of the observation with the missing Fare value
 
 
-# calculate the median value for the Fare variable of all passangers from the 3rd class
+# calculate the median value for the Fare variable of all passengers from the 3rd class
 
 
-# set the median value to the Fare variable of the passanger with a missing Fare
+# set the median value to the Fare variable of the passenger with a missing Fare
 
 
-# print the summary of the test set
+# print the summary for the Fare on the test set
 
 
 ####################
@@ -139,13 +136,13 @@
 # add the Sex facet to the plot
 
 
-# plot the number of passengers for different embarkment places and Survived values
+# plot the number of passengers for different ports and Survived values
 
 
 # examine the relation between Embarked and Survived, but with proportions
 
 
-# plot the Fare variable against Survived
+# examine the relation between Fare and Survived
 
 
 ######################

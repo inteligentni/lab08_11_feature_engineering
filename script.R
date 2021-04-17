@@ -169,13 +169,34 @@ gp1
 gp2 <- gp1 + facet_wrap(~Sex)
 gp2
 
-# plot the number of passengers for different embarkment places and Survived values
+
+# plot the number of passengers for different ports and Survived values
 gp3 <- ggplot(titanic.train, aes(x = Embarked, fill = Survived)) +
   geom_bar(position = "dodge", width = 0.45) +
   ylab("Number of passengers") + 
   xlab("Place of embarkment") +
   theme_bw()
 gp3
+
+
+# examine the relation between Embarked and Survived, but with proportions
+emb_prop <- prop.table(table(titanic_train$Embarked, titanic_train$Survived), margin = 1)
+emb_prop
+emb_prop_df <- as.data.frame(emb_prop)
+colnames(emb_prop_df) <- c("Embarked", "Survived", "Proportion")
+
+ggplot(data = emb_prop_df,
+       mapping = aes(x = Embarked, y = Proportion, fill=Survived)) +
+  geom_col(position = "dodge", width = 0.45) +
+  theme_minimal()
+
+
+# examine the relation between Fare and Survived
+ggplot(data = titanic_train,
+       mapping = aes(x = Fare, fill=Survived)) +
+  geom_density(alpha = 0.5) +
+  theme_minimal()
+
 
 ######################
 # Feature engineering

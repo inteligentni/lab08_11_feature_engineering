@@ -58,8 +58,8 @@ However, if you take a closer look at the output of the *str* function, you'll n
 
 ```{r}
 # number of observations with empty Cabin variable
-length(which(titanic.train$Cabin==""))
-length(which(titanic.test$Cabin==""))
+sum(titanic.train$Cabin=="")
+sum(titanic.test$Cabin=="")
 ```
 
 So, for 687 passengers in the training set and 327 passengers in the test, we have "" as the *Cabin* value. Should we consider these as missing values?
@@ -93,8 +93,8 @@ We can check the results of this transformation:
 
 ```{r}
 # print the number of missing Cabin values in the train and test sets
-length(which(is.na(titanic.train$Cabin)))
-length(which(is.na(titanic.test$Cabin)))
+sum(is.na(titanic.train$Cabin))
+sum(is.na(titanic.test$Cabin))
 ```
 
 Note that we have discovered missing values of the *Cabin* variable by spotting a few empty strings in the output of the *str* function. However, if those values were not amongst the first couple of values listed by *str*, they would have passed unnoticed. So, let's check other string variables for missing values 'hidden' as empty strings.
@@ -103,7 +103,7 @@ Note that we have discovered missing values of the *Cabin* variable by spotting 
 # check for the presence of empty strings in character variables in the train set 
 apply(X = titanic.train[,c("Name","Sex","Ticket","Embarked")],
       MARGIN = 2,
-      FUN = function(x) length(which(x=="")))
+      FUN = function(x) sum(trimws(x=="")))
 ```
 
 In the training set, only for the Embarked variable, we have 2 missing values. 
@@ -112,7 +112,7 @@ In the training set, only for the Embarked variable, we have 2 missing values.
 # check for the presence of empty strings in character variables in the test set 
 apply(X = titanic.test[,c("Name","Sex","Ticket","Embarked")],
       MARGIN = 2,
-      FUN = function(x) length(which(x=="")))
+      FUN = function(x) sum(trimws(x=="")))
 ```
 In the test set, none of the examined variables has missing values.
 
