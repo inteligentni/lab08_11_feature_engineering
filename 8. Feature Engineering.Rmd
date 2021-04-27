@@ -1,8 +1,8 @@
 ---
 title: "Data preparation and feature engineering"
 output:
-  word_document: default
   pdf_document: default
+  word_document: default
 urlcolor: blue
 ---
 
@@ -103,7 +103,7 @@ Note that we have discovered missing values of the *Cabin* variable by spotting 
 # check for the presence of empty strings in character variables in the train set 
 apply(X = titanic.train[,c("Name","Sex","Ticket","Embarked")],
       MARGIN = 2,
-      FUN = function(x) sum(trimws(x=="")))
+      FUN = function(x) sum(trimws(x)==""))
 ```
 
 In the training set, only for the Embarked variable, we have 2 missing values. 
@@ -112,7 +112,7 @@ In the training set, only for the Embarked variable, we have 2 missing values.
 # check for the presence of empty strings in character variables in the test set 
 apply(X = titanic.test[,c("Name","Sex","Ticket","Embarked")],
       MARGIN = 2,
-      FUN = function(x) sum(trimws(x=="")))
+      FUN = function(x) sum(trimws(x)==""))
 ```
 In the test set, none of the examined variables has missing values.
 
@@ -187,8 +187,8 @@ Let's also make *Embarked* a 'true' categorical variable by transforming it into
 
 ```{r}
 # transform the Embarked variable into a factor in both sets
-titanic.train$Embarked <- factor(titanic.train$Embarked)
-titanic.test$Embarked <- factor(titanic.test$Embarked)
+titanic.train$Embarked <- as.factor(titanic.train$Embarked)
+titanic.test$Embarked <- as.factor(titanic.test$Embarked)
 ```
 
 ## Numerical variables with a small number of missing values
@@ -307,7 +307,7 @@ titanic.train$Survived <- factor(titanic.train$Survived,
 
 # transform the Pclass variable into factor
 titanic.train$Pclass <- factor(titanic.train$Pclass, 
-                               levels = c(1,2,3),
+                               levels = 1:3,
                                labels = c("1st", "2nd", "3rd"))
 ```
 
@@ -351,11 +351,11 @@ When creating new features (attributes) to be used for prediction purposes, we n
 
 Hence, we will merge the training and the test sets and develop new features on the merged data.
 
-But before we do that, we need to assure that the training and the test sets have exactly the same structure. To that end, we will first add the *Survived* column to the test data, as a factor variable with the same levels as in the training set.
+But before we do that, we need to assure that the training and the test sets have exactly the same structure. To that end, we will first add the *Survived* column to the test data, with all NA values (as these values are unknown).
 
 ```{r}
 # add the Survived variable to the test set
-titanic.test$Survived <- factor(NA, levels = c(1,2), labels = c("No", "Yes"))
+titanic.test$Survived <- NA
 ```
 
 Next, we need to transform the *Pclass*, *Sex*, and *Embarked* variables in the test set into factors, since we've done that in the training set (the structure should be exactly the same).
@@ -366,10 +366,10 @@ titanic.test$Pclass <- factor(x = titanic.test$Pclass,
                               levels = c(1,2,3), labels = c("1st", "2nd", "3rd"))
 
 # transform the Sex variable into factor (in the test set)
-titanic.test$Sex <- factor(titanic.test$Sex)
+titanic.test$Sex <- as.factor(titanic.test$Sex)
 
 # transform the Embarked variable into factor (in the test set)
-titanic.test$Embarked <- factor(titanic.test$Embarked)
+titanic.test$Embarked <- as.factor(titanic.test$Embarked)
 ```
 
 Now, we can merge the two datasets.
@@ -394,25 +394,26 @@ We can observe that the *Name* variable consists of surname, title, first name, 
 
 The idea is to use the title of a person as a rough proxy for his/her age.
 
-First, we need to extract the title from the *Name* variable; to that end, we'll split the Name string using "," or "." as delimiters; lets' try it first.
+First, we need to extract the title from the *Name* variable; to that end, we'll split the Name string using "," or "." as delimiters; lets' try it first. 
+Note that a dot (".") is a special character in regular expressions and has to 'escaped', that is, preceded with a slash; since a slash is also a special character that has to be 'escaped', we end up with a double slash followed by a dot (\\.)
 
 ```{r}
 # split the name of the first observation on , or . characters
-strsplit(x = titanic.all$Name[1], split = "[,|.]")
+strsplit(x = titanic.all$Name[1], split = ",|\\.")
 ```
 
 We get a list of vectors, where each vector consists of pieces of a person's name. To extract the title, we need to simplify the output, so that instead of a list, we get a vector (with the elements of a person's name).
 
 ```{r}
 # split the name of the first observation on , or . characters and unlist
-unlist(strsplit(x = titanic.all$Name[1], split = "[,|.]"))
+unlist(strsplit(x = titanic.all$Name[1], split = ",|\\."))
 ```
 
 and then, take the second element of that vector:
 
 ```{r}
 # split the name of the first observation on , or . characters, unlist and take the 2nd elem.
-unlist(strsplit(x = titanic.all$Name[1], split = "[,|.]"))[2]
+unlist(strsplit(x = titanic.all$Name[1], split = ",|\\."))[2]
 ```
 
 You might have noticed a space before the title, we'll remove that quickly, but before that, we'll apply this procedure to all the rows in the titanic.all dataset to create a new feature:
@@ -420,7 +421,7 @@ You might have noticed a space before the title, we'll remove that quickly, but 
 ```{r}
 # create a new variable - Title - based on the value of the Name variable 
 titanic.all$Title <- sapply(titanic.all$Name, 
-                            FUN = function(x) unlist(strsplit(x, split = "[,|.]"))[2] )
+                            FUN = function(x) unlist(strsplit(x, split = ",|\\."))[2] )
 ```
 
 Now, let's remove that leading blank space.
@@ -456,8 +457,8 @@ boys <- c("Master", "Jonkheer")
 First, we'll introduce a new variable (feature) to represent the age-gender group.
 
 ```{r}
-# introduce a new character variable AgeGender
-titanic.all$AgeGender <- vector(mode = "character", length = nrow(titanic.all))
+# introduce the AgeGender variable
+titanic.all$AgeGender <- NA
 ```
 
 and, now define each age-gender group using the Title groupings we defined above. 
@@ -559,7 +560,8 @@ Let's see if our efforts in creating the *AgeGender* variable were worthwhile, t
 
 ```{r}
 # plot the AgeGender against Survived attribute
-ggplot(titanic.all[1:891,], aes(x = AgeGender, fill=Survived)) +
+ggplot(titanic.all[!is.na(titanic.all$Survived),], 
+       aes(x = AgeGender, fill=Survived)) +
   geom_bar(position = "dodge", width = 0.65) + 
   theme_bw()
 ```
@@ -570,8 +572,9 @@ Let's examine this also as percentages. First, we need to compute the percentage
 
 ```{r}
 # calculate the proportions for AgeGender and Survived values
-age.gen.surv.tbl <- prop.table(table(AgeGender = titanic.all$AgeGender[1:891],
-                                     Survived = titanic.all$Survived[1:891]), 
+age.gen.surv.tbl <- prop.table(table(AgeGender = titanic.all$AgeGender,
+                                     Survived = titanic.all$Survived,
+                                     useNA = 'no'), 
                                margin = 1)
 age.gen.surv.tbl
 ```
@@ -661,7 +664,7 @@ Turn *FamilySize* into a factor.
 ```{r}
 # transform FamilySize into factor
 titanic.all$FamilySize <- factor(titanic.all$FamilySize, 
-                                 levels = c(0,1,2,3), labels = c("0", "1", "2", "3+"))
+                                 levels = 0:3, labels = c(0:2, "3+"))
 table(titanic.all$FamilySize)
 ```
 
@@ -669,7 +672,8 @@ Let's see how this new feature affects survival prospects.
 
 ```{r}
 # plot the FamilySize vs. Survived
-ggplot(titanic.all[1:891,], aes(x = FamilySize, fill = Survived)) + 
+ggplot(titanic.all[!is.na(titanic.all$Survived),], 
+       aes(x = FamilySize, fill = Survived)) + 
   geom_bar(position = "dodge", width = 0.5) + 
   theme_light()
 ```
@@ -698,7 +702,7 @@ length(unique(titanic.all$Ticket))
 # use tapply to compute the number of occurrences of each unique Ticket value 
 ticket.count <- tapply(titanic.all$Ticket,
                        INDEX = titanic.all$Ticket,
-                       FUN = function(x) sum( !is.na(x) ))
+                       FUN = length)
 
 # create a data frame with ticket name and ticket count as variables
 ticket.count.df <- data.frame(ticket=names(ticket.count), 
@@ -722,8 +726,7 @@ We'll add ticket count to each passenger by merging *titanic.all* dataset with t
 ```{r}
 # merge titanic.all and ticket.count.df datasets on the Ticket variable
 titanic.all <- merge(x = titanic.all, y = ticket.count.df,
-                     by.x = "Ticket", by.y = "ticket",
-                     all.x = TRUE, all.y = TRUE)
+                     by.x = "Ticket", by.y = "ticket")
 
 # change the name of the newly added column to PersonPerTicket
 colnames(titanic.all)[16] <- "PersonPerTicket"
@@ -732,13 +735,13 @@ colnames(titanic.all)[16] <- "PersonPerTicket"
 As we did with *FamilySize*, we'll aggregate infrequent values of *PersonPerTicket* and transform the variable into a factor.
 
 ```{r}
-# set the PersonPerTicket to 3 to all observations where PersonPerTicket > 3
-titanic.all$PersonPerTicket[titanic.all$PersonPerTicket > 3] <- 3
+# set the PersonPerTicket to 4 to all observations where PersonPerTicket > 4
+titanic.all$PersonPerTicket[titanic.all$PersonPerTicket > 4] <- 4
 
 # convert PersonPerTicket to factor
 titanic.all$PersonPerTicket <- factor(titanic.all$PersonPerTicket, 
-                                      levels = c(1,2,3), 
-                                      labels = c("1", "2", "3+"))
+                                      levels = 1:4, 
+                                      labels = c(1:3, "4+"))
 
 # print the contingency table for the PersonPerTicket
 table(titanic.all$PersonPerTicket)
