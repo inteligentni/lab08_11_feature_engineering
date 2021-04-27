@@ -180,7 +180,7 @@ gp3
 
 
 # examine the relation between Embarked and Survived, but with proportions
-emb_prop <- prop.table(table(titanic_train$Embarked, titanic_train$Survived), margin = 1)
+emb_prop <- prop.table(table(titanic.train$Embarked, titanic.train$Survived), margin = 1)
 emb_prop
 emb_prop_df <- as.data.frame(emb_prop)
 colnames(emb_prop_df) <- c("Embarked", "Survived", "Proportion")
@@ -192,7 +192,7 @@ ggplot(data = emb_prop_df,
 
 
 # examine the relation between Fare and Survived
-ggplot(data = titanic_train,
+ggplot(data = titanic.train,
        mapping = aes(x = Fare, fill=Survived)) +
   geom_density(alpha = 0.5) +
   theme_minimal()
@@ -203,7 +203,7 @@ ggplot(data = titanic_train,
 ######################
 
 # add the Survived variable to the test set
-titanic.test$Survived <- factor(NA, levels = c(1,2), labels = c("No", "Yes"))
+titanic.test$Survived <- NA
 
 # transform the Pclass variable into factor (in the test set)
 titanic.test$Pclass <- factor(x = titanic.test$Pclass, 
@@ -227,17 +227,17 @@ titanic.all <- rbind(titanic.train, titanic.test)
 titanic.all$Name[1:10]
 
 # split the name of the first observation on , or . characters
-strsplit(x = titanic.all$Name[1], split = "[,|.]")
+strsplit(x = titanic.all$Name[1], split = ",|\\.")
 
 # split the name of the first observation on , or . characters and unlist
-unlist(strsplit(x = titanic.all$Name[1], split = "[,|.]"))
+unlist(strsplit(x = titanic.all$Name[1], split = ",|\\."))
 
 # split the name of the first observation on , or . characters, unlist and take the 2nd elem.
-unlist(strsplit(x = titanic.all$Name[1], split = "[,|.]"))[2]
+unlist(strsplit(x = titanic.all$Name[1], split = ",|\\."))[2]
 
 # create a variable Title based on the value of the Name variable 
 titanic.all$Title <- sapply(titanic.all$Name, 
-                            FUN = function(x) unlist(strsplit(x, split = "[,|.]"))[2] )
+                            FUN = function(x) unlist(strsplit(x, split = ",|\\."))[2] )
 
 # remove the leading space character from the Title
 titanic.all$Title <- trimws(titanic.all$Title, which = "left")
@@ -258,7 +258,7 @@ adult.men <- c("Capt", "Col", "Don", "Dr", "Major", "Mr", "Rev", "Sir")
 boys <- c("Master", "Jonkheer")
 
 # introduce a new character variable AgeGender
-titanic.all$AgeGender <- vector(mode = "character", length = nrow(titanic.all))
+titanic.all$AgeGender <- NA
 
 # set the AgeGender value based on the vector the Title value belongs to
 titanic.all$AgeGender[ titanic.all$Title %in% adult.women ] <- "Adult_Female"
@@ -275,7 +275,7 @@ ggplot(titanic.all[titanic.all$AgeGender=="Young_Female",], aes(x = Age)) +
   theme_bw()
 
 # plot the distribution of the Age attribute in the Adult_Male group
-ggplot(titanic.all[titanic.all$AgeGender=="AdultMen", ], aes(x = Age)) + 
+ggplot(titanic.all[titanic.all$AgeGender=="Adult_Male", ], aes(x = Age)) + 
   geom_density() + 
   scale_x_continuous(breaks = seq(5,80,5)) +
   theme_bw()
@@ -284,7 +284,7 @@ ggplot(titanic.all[titanic.all$AgeGender=="AdultMen", ], aes(x = Age)) +
 nrow(titanic.all[titanic.all$AgeGender=="Young_Female" & !is.na(titanic.all$Age),])
 
 # set the AgeGender to 'Adult_Female' for all 'girls' with age over 18
-titanic.all$AgeGender[titanic.all$AgeGender=="Girls" & 
+titanic.all$AgeGender[titanic.all$AgeGender=="Young_Female" & 
                         !is.na(titanic.all$Age) & 
                         titanic.all$Age >= 18] <- "Adult_Female"
 
@@ -307,13 +307,15 @@ titanic.all$AgeGender <- factor(titanic.all$AgeGender)
 summary(titanic.all$AgeGender)
 
 # plot the AgeGender against Survived attribute
-ggplot(titanic.all[1:891,], aes(x = AgeGender, fill=Survived)) +
+ggplot(titanic.all[is.na(titanic.all$Survived) == FALSE,], 
+       aes(x = AgeGender, fill=Survived)) +
   geom_bar(position = "dodge", width = 0.65) +
   theme_bw()
 
 # calculate the proportions for AgeGender and Survived values
-age.gen.surv.tbl <- prop.table(table(AgeGender = titanic.all$AgeGender[1:891],
-                                     Survived = titanic.all$Survived[1:891]), 
+age.gen.surv.tbl <- prop.table(table(titanic.all$AgeGender,
+                                     titanic.all$Survived,
+                                     useNA = 'no'), 
                                margin = 1)
 age.gen.surv.tbl
 
@@ -321,8 +323,8 @@ age.gen.surv.tbl
 age.gen.surv.df <- as.data.frame(age.gen.surv.tbl)
 age.gen.surv.df
 
-# change the name of the last column to better reflect its meaning
-colnames(age.gen.surv.df)[3] <- "Proportion"
+# change the name of the columns to better reflect their meaning
+colnames(age.gen.surv.df) <- c("AgeGender", "Survived", "Proportion")
 
 # plot the AgeGender vs. Proportion vs. Survived
 ggplot(age.gen.surv.df, aes(x = AgeGender, y = Proportion, fill=Survived)) +
@@ -358,12 +360,13 @@ titanic.all$FamilySize[titanic.all$FamilySize > 3] <- 3
 
 # transform FamilySize into factor
 titanic.all$FamilySize <- factor(titanic.all$FamilySize, 
-                                 levels = c(0,1,2,3), 
-                                 labels = c("0", "1", "2", "3+"))
+                                 levels = 0:3, 
+                                 labels = c(0:2, "3+"))
 table(titanic.all$FamilySize)
 
 # plot the FamilySize vs. Survived
-ggplot(titanic.all[1:891,], aes(x = FamilySize, fill = Survived)) + 
+ggplot(titanic.all[is.na(titanic.all$Survived) == FALSE,], 
+       aes(x = FamilySize, fill = Survived)) + 
   geom_bar(position = "dodge", width = 0.5) + 
   theme_light()
 
@@ -380,7 +383,7 @@ length(unique(titanic.all$Ticket))
 # use tapply to compute the number of occurrences of each unique Ticket value 
 ticket.count <- tapply(titanic.all$Ticket,
                        INDEX = titanic.all$Ticket,
-                       FUN = function(x) sum( !is.na(x) ))
+                       FUN = length)
 
 # create a data frame with ticket name and ticket count as variables
 ticket.count.df <- data.frame(ticket=names(ticket.count), 
@@ -394,19 +397,21 @@ table(ticket.count.df$count)
 
 # merge titanic.all and ticket.count.df datasets on the Ticket variable
 titanic.all <- merge(x = titanic.all, y = ticket.count.df,
-                     by.x = "Ticket", by.y = "ticket",
-                     all.x = TRUE, all.y = TRUE)
+                     by.x = "Ticket", by.y = "ticket")
 
 # change the name of the newly added column to PersonPerTicket
 colnames(titanic.all)[16] <- "PersonPerTicket"
 
-# set the PersonPerTicket to 3 to all observations where PersonPerTicket > 3
-titanic.all$PersonPerTicket[titanic.all$PersonPerTicket > 3] <- 3
+# print the contingency table of the PersonPerTicket variable
+table(titanic.all$PersonPerTicket)
+
+# set the PersonPerTicket to 4 to all observations where PersonPerTicket > 4
+titanic.all$PersonPerTicket[titanic.all$PersonPerTicket > 4] <- 4
 
 # convert PersonPerTicket to factor
 titanic.all$PersonPerTicket <- factor(titanic.all$PersonPerTicket, 
-                                      levels = c(1,2,3), 
-                                      labels = c("1", "2", "3+"))
+                                      levels = 1:4, 
+                                      labels = c(1:3, "4+"))
 
 # print the contingency table for the PersonPerTicket
 table(titanic.all$PersonPerTicket)
@@ -415,9 +420,10 @@ table(titanic.all$PersonPerTicket)
 xtabs(~ PersonPerTicket + FamilySize, data = titanic.all)
 
 # plot all survived passangers (without NAs)
-ggplot(titanic.all[!is.na(titanic.all$Survived),], aes(x = PersonPerTicket, fill=Survived)) + 
+ggplot(titanic.all[!is.na(titanic.all$Survived),], 
+       aes(x = PersonPerTicket, fill=Survived)) + 
   geom_bar(position = "dodge", width = 0.5) + 
-  theme_light()
+  theme_minimal()
 
 # calculate the proportions of the PersonPerTicket vs. Survived table
 tcount.surv.tbl <- prop.table(table(PersonPerTicket = titanic.all$PersonPerTicket,
@@ -436,7 +442,7 @@ colnames(tcount.surv.df)[3] <- "Proportion"
 # plot the PersonPerTicket vs. Proportion barchart, split based on the Survived attribute
 ggplot(tcount.surv.df, aes(x = PersonPerTicket, y = Proportion, fill=Survived)) +
   geom_col(width = 0.5, position = "dodge") + 
-  theme_light() 
+  theme_minimal() 
 
 ##################################
 # Save the augmented data set
