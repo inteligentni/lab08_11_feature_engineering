@@ -26,9 +26,25 @@ summary(titanic.train)
 # print the summary of the test set
 summary(titanic.test)
 
-# number of observations with empty Cabin variable
-length(which(titanic.train$Cabin==""))
-length(which(titanic.test$Cabin==""))
+# checking the presence of empty strings or other irregular values in character variables in the train set
+# first for one variable, and then for all
+sum(titanic.train$Cabin=="" | titanic.train$Cabin==" " | titanic.train$Cabin=="-" | is.na(titanic.train$Cabin))
+
+char_vars = c("Name", "Sex", "Cabin", "Embarked", "Ticket")
+apply(X = titanic.train[,char_vars],
+      MARGIN = 2,
+      FUN = function(x) sum(x=="" | x==" " | x=="-" | is.na(x)))
+
+# do the same in the test set 
+apply(X = titanic.test[,char_vars],
+      MARGIN = 2,
+      FUN = function(x) sum(x=="" | x==" " | x=="-" | is.na(x)))
+
+# check the irregular values present in the Embarked variable 
+head(sort(unique(titanic.train$Embarked)))
+
+# set the empty Embarked values to NA in the train set
+titanic.train$Embarked[titanic.train$Embarked==""] <- NA
 
 # get indices of observations with no Cabin value from the first class, in the train set
 train.class1.no.cabin <- which(titanic.train$Pclass==1 & titanic.train$Cabin=="")
@@ -38,26 +54,13 @@ length(train.class1.no.cabin)
 test.class1.no.cabin <- which(titanic.test$Pclass==1 & titanic.test$Cabin=="")
 length(test.class1.no.cabin)
 
-# set the Cabin value for identified passangers to NA in the train and test sets
+# set the Cabin value for identified passengers to NA in the train and test sets
 titanic.train$Cabin[train.class1.no.cabin] <- NA
 titanic.test$Cabin[test.class1.no.cabin] <- NA
 
 # print the number of missing Cabin values in the train and test sets
-length(which(is.na(titanic.train$Cabin)))
-length(which(is.na(titanic.test$Cabin)))
-
-# checking the presence of empty strings in character variables in the train set
-apply(X = titanic.train[,c("Name","Sex","Ticket","Embarked")],
-      MARGIN = 2,
-      FUN = function(x) length(which(x=="")))
-
-# do the same in the test set 
-apply(X = titanic.test[,c("Name","Sex","Ticket","Embarked")],
-      MARGIN = 2,
-      FUN = function(x) length(which(x=="")))
-
-# set the empty Embarked values to NA in the train set
-titanic.train$Embarked[titanic.train$Embarked==""] <- NA
+sum(is.na(titanic.train$Cabin))
+sum(is.na(titanic.test$Cabin))
 
 #install.packages('Amelia')
 # load Amelia library
@@ -83,10 +86,6 @@ par(mfrow=c(1,1))
 ## Categorical variables with a small number of missing values
 ###############################################################
 
-# get the number of unique values for the Embarked variable in both sets
-unique(titanic.train$Embarked)
-unique(titanic.test$Embarked)
-
 # create the contingency table for the values of the Embarked variable
 xtabs(~Embarked, data = titanic.train)
 
@@ -97,8 +96,12 @@ titanic.train$Embarked[is.na(titanic.train$Embarked)] <- 'S'
 xtabs(~Embarked, data = titanic.train)
 
 # transform the Embarked variable into a factor in both sets
-titanic.train$Embarked <- factor(titanic.train$Embarked)
-titanic.test$Embarked <- factor(titanic.test$Embarked)
+titanic.train$Embarked <- factor(titanic.train$Embarked,
+                                 levels = c("S","C","Q"),
+                                 labels = c("Southampton", "Cherbourg", "Queenstown"))
+titanic.test$Embarked <- factor(titanic.test$Embarked,
+                                levels = c("S","C","Q"),
+                                labels = c("Southampton", "Cherbourg", "Queenstown"))
 
 ###############################################################
 ## Numerical variables with a small number of missing values
@@ -110,11 +113,11 @@ shapiro.test(titanic.test$Fare)
 # get the class of the observation with missing Fare variable
 missing.fare.pclass <- titanic.test$Pclass[is.na(titanic.test$Fare)]
 
-# calculate the median value for the Fare variable of all passangers from the 3rd class
+# calculate the median value for the Fare variable of all passengers from the 3rd class
 median.fare <- median(x = titanic.test$Fare[titanic.test$Pclass == missing.fare.pclass], 
                       na.rm = T) # we have to set this to true as Fare has one NA value
 
-# set the median value to the Fare variable of the passanger with a missing Fare
+# set the median value to the Fare variable of the passenger with a missing Fare
 titanic.test$Fare[is.na(titanic.test$Fare)] <- median.fare
 
 # print the summary of the test set
@@ -128,7 +131,7 @@ summary(titanic.test$Fare)
 ## Examining the predictive power of variables from the data set
 #################################################################
 
-# transofrm the Sex variable into factor
+# transform the Sex variable into factor
 titanic.train$Sex <- factor(titanic.train$Sex)
 
 # get the summary of the Sex variable
@@ -141,16 +144,18 @@ prop.table(summary( titanic.train$Sex ))
 sex.survived.counts <- xtabs(~Sex + Survived, data = titanic.train)
 sex.survived.counts
 
+# transform the Survived variable into factor
+titanic.train$Survived <- factor(titanic.train$Survived, 
+                                 levels = c(0,1), labels = c('No','Yes'))
+
+# create the table again, now labels for Survived will be available
+sex.survived.counts <- xtabs(~Sex + Survived, data = titanic.train)
+sex.survived.counts
+
 # compute the proportions for Sex vs. Survived
 sex.surv.tbl <- prop.table(sex.survived.counts, 
                            margin = 1) # proportions are computed at the row level (each row sums to 1)
 sex.surv.tbl
-
-library(ggplot2)
-
-# transform the Survived variable into factor
-titanic.train$Survived <- factor(titanic.train$Survived, 
-                                 levels = c(0,1), labels = c('No','Yes'))
 
 # transform the Pclass variable into factor
 titanic.train$Pclass <- factor(titanic.train$Pclass, 
@@ -158,36 +163,41 @@ titanic.train$Pclass <- factor(titanic.train$Pclass,
                                labels = c("1st", "2nd", "3rd"))
 
 # plot the number of passengers for different classes and Survived values
+library(ggplot2)
+
 gp1 <- ggplot(titanic.train, aes(x = Pclass, fill=Survived)) +
   geom_bar(position = "dodge", width = 0.4) +
-  ylab("Number of passengers") + 
-  xlab("Passenger class") +
+  labs(x="Passenger class", y="Number of passengers") + 
   theme_bw()
 gp1
 
 # add the Sex facet to the plot
-gp2 <- gp1 + facet_wrap(~Sex)
+gp2 <- gp1 + facet_wrap(~Sex, nrow=2)
 gp2
 
-
-# plot the number of passengers for different ports and Survived values
-gp3 <- ggplot(titanic.train, aes(x = Embarked, fill = Survived)) +
-  geom_bar(position = "dodge", width = 0.45) +
-  ylab("Number of passengers") + 
-  xlab("Place of embarkment") +
+# Instead of counts, plot the proportions
+gp3 <- ggplot(titanic.train, aes(x = Pclass, fill=Survived)) +
+  geom_bar(position = "fill", width = 0.4) + # note that 'fill' is used instead of 'dodge'
+  labs(x="Passenger class", y="Proportion of passengers") + 
   theme_bw()
 gp3
 
+gp4 <- gp3 + facet_wrap(~Sex, nrow=2)
+gp4
+
+
+# plot the number of passengers for different ports and Survived values
+ggplot(titanic.train, aes(x = Embarked, fill = Survived)) +
+  geom_bar(position = "dodge", width = 0.5) +
+  labs(x="Place of embarkment", y="Number of passengers") +
+  theme_bw()
+
 
 # examine the relation between Embarked and Survived, but with proportions
-emb_prop <- prop.table(table(titanic.train$Embarked, titanic.train$Survived), margin = 1)
-emb_prop
-emb_prop_df <- as.data.frame(emb_prop)
-colnames(emb_prop_df) <- c("Embarked", "Survived", "Proportion")
-
-ggplot(data = emb_prop_df,
-       mapping = aes(x = Embarked, y = Proportion, fill=Survived)) +
-  geom_col(position = "dodge", width = 0.45) +
+ggplot(data = titanic.train,
+       mapping = aes(x = Embarked, fill=Survived)) +
+  geom_bar(position = "fill", width = 0.5) +
+  labs(x="\nPlace of embarkment", y="Proportion of passengers\n") +
   theme_minimal()
 
 
@@ -213,9 +223,6 @@ titanic.test$Pclass <- factor(x = titanic.test$Pclass,
 # transform the Sex variable into factor (in the test set)
 titanic.test$Sex <- factor(titanic.test$Sex)
 
-# transform the Embarked variable into factor (in the test set)
-titanic.test$Embarked <- factor(titanic.test$Embarked)
-
 # merge train and test sets
 titanic.all <- rbind(titanic.train, titanic.test)
 
@@ -224,7 +231,7 @@ titanic.all <- rbind(titanic.train, titanic.test)
 ##################################
 
 # print a sample of the Name variable
-titanic.all$Name[1:10]
+sample(titanic.all$Name, 10)
 
 # split the name of the first observation on , or . characters
 strsplit(x = titanic.all$Name[1], split = ",|\\.")
@@ -280,9 +287,6 @@ ggplot(titanic.all[titanic.all$AgeGender=="Adult_Male", ], aes(x = Age)) +
   scale_x_continuous(breaks = seq(5,80,5)) +
   theme_bw()
 
-# print the number of young females who has the Age value set
-nrow(titanic.all[titanic.all$AgeGender=="Young_Female" & !is.na(titanic.all$Age),])
-
 # set the AgeGender to 'Adult_Female' for all 'girls' with age over 18
 titanic.all$AgeGender[titanic.all$AgeGender=="Young_Female" & 
                         !is.na(titanic.all$Age) & 
@@ -309,27 +313,15 @@ summary(titanic.all$AgeGender)
 # plot the AgeGender against Survived attribute
 ggplot(titanic.all[is.na(titanic.all$Survived) == FALSE,], 
        aes(x = AgeGender, fill=Survived)) +
-  geom_bar(position = "dodge", width = 0.65) +
-  theme_bw()
+  geom_bar(position = "dodge", width = 0.55) +
+  theme_minimal()
 
-# calculate the proportions for AgeGender and Survived values
-age.gen.surv.tbl <- prop.table(table(titanic.all$AgeGender,
-                                     titanic.all$Survived,
-                                     useNA = 'no'), 
-                               margin = 1)
-age.gen.surv.tbl
-
-# transform the proportions table in a dataframe
-age.gen.surv.df <- as.data.frame(age.gen.surv.tbl)
-age.gen.surv.df
-
-# change the name of the columns to better reflect their meaning
-colnames(age.gen.surv.df) <- c("AgeGender", "Survived", "Proportion")
-
-# plot the AgeGender vs. Proportion vs. Survived
-ggplot(age.gen.surv.df, aes(x = AgeGender, y = Proportion, fill=Survived)) +
-  geom_col(position = "dodge", width = 0.5) + 
-  theme_bw()
+# plot the AgeGender vs. Survived but as proportions
+ggplot(titanic.all[is.na(titanic.all$Survived) == FALSE,], 
+       aes(x = AgeGender, fill=Survived)) +
+  geom_bar(position = "fill", width = 0.55) +
+  ylab("Proportion") +
+  theme_minimal()
 
 ###################################
 ## Creating the FamilySize variable
@@ -375,13 +367,13 @@ ggplot(titanic.all[is.na(titanic.all$Survived) == FALSE,],
 #####################################
 
 # print a sample of Ticket values
-titanic.all$Ticket[1:20]
+sample(titanic.all$Ticket, 20)
 
 # compute the number of distinct values of the Ticket variable
 length(unique(titanic.all$Ticket))
 
-# use tapply to compute the number of occurrences of each unique Ticket value 
-ticket.count <- tapply(titanic.all$Ticket,
+# use tapply to compute the number of passengers on the same ticket
+ticket.count <- tapply(titanic.all$PassengerId,
                        INDEX = titanic.all$Ticket,
                        FUN = length)
 
@@ -425,23 +417,11 @@ ggplot(titanic.all[!is.na(titanic.all$Survived),],
   geom_bar(position = "dodge", width = 0.5) + 
   theme_minimal()
 
-# calculate the proportions of the PersonPerTicket vs. Survived table
-tcount.surv.tbl <- prop.table(table(PersonPerTicket = titanic.all$PersonPerTicket,
-                                    Survived = titanic.all$Survived, 
-                                    useNA = "no"), 
-                              margin = 1)
-tcount.surv.tbl
-
-# convert the table into a data frame
-tcount.surv.df <- as.data.frame(tcount.surv.tbl)
-tcount.surv.df
-
-# change the name of the last column to better reflect its meaning
-colnames(tcount.surv.df)[3] <- "Proportion"
-
-# plot the PersonPerTicket vs. Proportion barchart, split based on the Survived attribute
-ggplot(tcount.surv.df, aes(x = PersonPerTicket, y = Proportion, fill=Survived)) +
-  geom_col(width = 0.5, position = "dodge") + 
+# plot the PersonPerTicket vs. Survived using proportions
+ggplot(titanic.all[!is.na(titanic.all$Survived),],
+                   aes(x = PersonPerTicket, fill=Survived)) +
+  geom_bar(width = 0.5, position = "fill") + 
+  ylab("Proportions") +
   theme_minimal() 
 
 ##################################

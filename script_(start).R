@@ -11,7 +11,6 @@
 
 # print the structure of the train set
 
-
 # print the structure of the test set
 
 
@@ -25,25 +24,30 @@
 # print the summary of the test set
 
 
-# number of observations with empty Cabin variable
+# checking the presence of empty strings or other irregular values in character variables in the train set
+# first for one variable, and then for all
 
-
-# get indices of observations with no Cabin value from the first class, in the train set
-
-
-# set the Cabin value for identified passengers to NA
-
-
-# do the same on the test set
-
-
-# check the presence of empty strings in character variables in the train set
 
 
 # do the same in the test set 
 
 
+# check the irregular values present in the Embarked variable 
+
+
 # set the empty Embarked values to NA in the train set
+
+
+# get indices of observations with no Cabin value from the first class, in the train set
+
+
+# get indices of observations with no Cabin value from the first class, in the test set
+
+
+# set the Cabin value for identified passengers to NA in the train and test sets
+
+
+# print the number of missing Cabin values in the train and test sets
 
 
 #install.packages('Amelia')
@@ -51,7 +55,14 @@
 
 
 # set the display area to show two plots in the same row 
-# use the missmap f. to visualise the missing data in the train and test sets
+
+
+# use the missmap f. to visualise the missing data in the train set
+
+
+# use the missmap f. to visualise the missing data in the test set
+
+
 # revert the plotting area to the default (one plot per row)
 
 
@@ -62,9 +73,6 @@
 ###############################################################
 ## Categorical variables with a small number of missing values
 ###############################################################
-
-# get the number of unique values for the Embarked variable in both sets
-
 
 # create the contingency table for the values of the Embarked variable
 
@@ -86,7 +94,7 @@
 # test the Fare variable for normality
 
 
-# get the passenger class of the observation with the missing Fare value
+# get the class of the observation with missing Fare variable
 
 
 # calculate the median value for the Fare variable of all passengers from the 3rd class
@@ -95,7 +103,7 @@
 # set the median value to the Fare variable of the passenger with a missing Fare
 
 
-# print the summary for the Fare on the test set
+# print the summary of the test set
 
 
 ####################
@@ -106,7 +114,7 @@
 ## Examining the predictive power of variables from the data set
 #################################################################
 
-# transofrm the Sex variable into factor
+# transform the Sex variable into factor
 
 
 # get the summary of the Sex variable
@@ -118,31 +126,40 @@
 # create a contingency table for Sex vs. Survived
 
 
+
 # transform the Survived variable into factor
+
+
+# create the table again, now labels for Survived will be available
 
 
 # compute the proportions for Sex vs. Survived
 
 
-# plot the number of passengers for different Sex and Survived values
-
-
 # transform the Pclass variable into factor
+
 
 
 # plot the number of passengers for different classes and Survived values
 
 
+
 # add the Sex facet to the plot
+
+
+# Instead of counts, plot the proportions
 
 
 # plot the number of passengers for different ports and Survived values
 
 
+
 # examine the relation between Embarked and Survived, but with proportions
 
 
+
 # examine the relation between Fare and Survived
+
 
 
 ######################
@@ -157,9 +174,6 @@
 
 
 # transform the Sex variable into factor (in the test set)
-
-
-# transform the Embarked variable into factor (in the test set)
 
 
 # merge train and test sets
@@ -208,21 +222,18 @@ boys <- c("Master", "Jonkheer")
 # set the AgeGender value based on the vector the Title value belongs to
 
 
-
 # print the contingency table for the AgeGender values
 
 
 # plot the distribution of the Age attribute in the Young_Female group
 
 
+
 # plot the distribution of the Age attribute in the Adult_Male group
 
 
-# print the number of young females who has the Age value set
-
 
 # set the AgeGender to 'Adult_Female' for all 'girls' with age over 18
-
 
 
 # print the number of adult males who has the Age value set
@@ -232,7 +243,7 @@ boys <- c("Master", "Jonkheer")
 
 
 
-# create the contingency table for the AgeGender variable
+# print the contingency table for the AgeGender variable
 
 
 # print the proportions table for the AgeGender variable
@@ -241,31 +252,20 @@ boys <- c("Master", "Jonkheer")
 # transform the AgeGender to factor
 
 
+
 # plot the AgeGender against Survived attribute
 
 
-# calculate the proportions for AgeGender and Survived values
 
+# plot the AgeGender vs. Survived but as proportions
 
-# transform the proportions table in a dataframe
-
-
-# change the name of the last column to better reflect its meaning
-
-
-# plot the AgeGender vs. Proportion vs. Survived
 
 
 ###################################
 ## Creating the FamilySize variable
 ###################################
 
-# examine the values of the SibSp variable
-
-
-
-# examine the values of the Parch variable
-
+# examine the values of the SibSp and Parch variables
 
 
 # create a new variable FamilySize based on the SibSp and Parch values
@@ -297,7 +297,7 @@ boys <- c("Master", "Jonkheer")
 # compute the number of distinct values of the Ticket variable
 
 
-# use tapply to compute the number of occurrences of each unique Ticket value 
+# use tapply to compute the number of passengers on the same ticket
 
 
 
@@ -317,10 +317,14 @@ boys <- c("Master", "Jonkheer")
 # change the name of the newly added column to PersonPerTicket
 
 
-# set the PersonPerTicket to 3 to all observations where PersonPerTicket > 3
+# print the contingency table of the PersonPerTicket variable
+
+
+# set the PersonPerTicket to 4 to all observations where PersonPerTicket > 4
 
 
 # convert PersonPerTicket to factor
+
 
 
 # print the contingency table for the PersonPerTicket
@@ -332,18 +336,8 @@ boys <- c("Master", "Jonkheer")
 # plot all survived passangers (without NAs)
 
 
+# plot the PersonPerTicket vs. Survived using proportions
 
-# calculate the proportions of the PersonPerTicket vs. Survived table
-
-
-
-# convert the table into a data frame
-
-
-# change the name of the last column to better reflect its meaning
-
-
-# plot the PersonPerTicket vs. Proportion barchart, split based on the Survived attribute
 
 
 ##################################
