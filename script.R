@@ -213,149 +213,225 @@ ggplot(data = titanic.train,
 ######################
 
 # add the Survived variable to the test set
+titanic.test$Survived <- NA
 
 # transform the Pclass variable into factor (in the test set)
-
+titanic.test$Pclass <- factor(x = titanic.test$Pclass, 
+                              levels = c(1,2,3),
+                              labels = c("1st", "2nd", "3rd"))
 
 # transform the Sex variable into factor (in the test set)
+titanic.test$Sex <- factor(titanic.test$Sex)
 
 # merge train and test sets
+titanic.all <- rbind(titanic.train, titanic.test)
 
 ##################################
 ## Creating an age proxy variable
 ##################################
 
 # print a sample of the Name variable
+sample(titanic.all$Name, 10)
 
 # split the name of the first observation on , or . characters
+strsplit(x = titanic.all$Name[1], split = ",|\\.")
 
 # split the name of the first observation on , or . characters and unlist
+unlist(strsplit(x = titanic.all$Name[1], split = ",|\\."))
 
 # split the name of the first observation on , or . characters, unlist and take the 2nd elem.
+unlist(strsplit(x = titanic.all$Name[1], split = ",|\\."))[2]
 
 # create a variable Title based on the value of the Name variable 
-
+titanic.all$Title <- sapply(titanic.all$Name, 
+                            FUN = function(x) unlist(strsplit(x, split = ",|\\."))[2] )
 
 # remove the leading space character from the Title
+titanic.all$Title <- trimws(titanic.all$Title, which = "left")
 
 # print the contingency table for the Title values
+table(titanic.all$Title)
 
 # create a vector of all women (adult female) titles
+adult.women <- c("Dona", "Lady", "Mme", "Mrs", "the Countess")
 
 # create a vector of all girl (young female) titles
+girls <- c("Ms", "Mlle", "Miss")
 
 # create a vector of all men (adult male) titles
+adult.men <- c("Capt", "Col", "Don", "Dr", "Major", "Mr", "Rev", "Sir")
 
 # create a vector of all boy (young male) titles
+boys <- c("Master", "Jonkheer")
 
 # introduce a new character variable AgeGender
+titanic.all$AgeGender <- NA
 
 # set the AgeGender value based on the vector the Title value belongs to
-
+titanic.all$AgeGender[ titanic.all$Title %in% adult.women ] <- "Adult_Female"
+titanic.all$AgeGender[ titanic.all$Title %in% adult.men ] <- "Adult_Male" 
+titanic.all$AgeGender[ titanic.all$Title %in% girls ] <- "Young_Female" 
+titanic.all$AgeGender[ titanic.all$Title %in% boys ] <- "Young_Male" 
 
 # print the contingency table for the AgeGender values
+table(titanic.all$AgeGender)
 
 # plot the distribution of the Age attribute in the Young_Female group
-
+ggplot(titanic.all[titanic.all$AgeGender=="Young_Female",], aes(x = Age)) + 
+  geom_density() + 
+  theme_bw()
 
 # plot the distribution of the Age attribute in the Adult_Male group
-
+ggplot(titanic.all[titanic.all$AgeGender=="Adult_Male", ], aes(x = Age)) + 
+  geom_density() + 
+  scale_x_continuous(breaks = seq(5,80,5)) +
+  theme_bw()
 
 # set the AgeGender to 'Adult_Female' for all 'girls' with age over 18
-
+titanic.all$AgeGender[titanic.all$AgeGender=="Young_Female" & 
+                        !is.na(titanic.all$Age) & 
+                        titanic.all$Age >= 18] <- "Adult_Female"
 
 # print the number of adult males who has the Age value set
+nrow(titanic.all[titanic.all$AgeGender=="Adult_Male" & !is.na(titanic.all$Age),])
 
 # set the AgeGender to 'Young_Male' for all 'Adult_Male' with age under 18
-
+titanic.all$AgeGender[titanic.all$AgeGender=="Adult_Male" &
+                        !is.na(titanic.all$Age) & 
+                        titanic.all$Age < 18] <- "Young_Male"
 
 # print the contingency table for the AgeGender variable
+table(titanic.all$AgeGender)
 
 # print the proportions table for the AgeGender variable
+round(prop.table(table(titanic.all$AgeGender)), digits = 2)
 
 # transform the AgeGender to factor
-
+titanic.all$AgeGender <- factor(titanic.all$AgeGender)
+summary(titanic.all$AgeGender)
 
 # plot the AgeGender against Survived attribute
-
+ggplot(titanic.all[is.na(titanic.all$Survived) == FALSE,], 
+       aes(x = AgeGender, fill=Survived)) +
+  geom_bar(position = "dodge", width = 0.55) +
+  theme_minimal()
 
 # plot the AgeGender vs. Survived but as proportions
-
+ggplot(titanic.all[is.na(titanic.all$Survived) == FALSE,], 
+       aes(x = AgeGender, fill=Survived)) +
+  geom_bar(position = "fill", width = 0.55) +
+  ylab("Proportion") +
+  theme_minimal()
 
 ###################################
 ## Creating the FamilySize variable
 ###################################
 
 # examine the values of the SibSp variable
+summary(titanic.all$SibSp)
 
+table(titanic.all$SibSp)
 
 # examine the values of the Parch variable
+summary(titanic.all$Parch)
 
+table(titanic.all$Parch)
 
 # create a new variable FamilySize based on the SibSp and Parch values
-
+titanic.all$FamilySize <- titanic.all$SibSp + titanic.all$Parch
+summary(titanic.all$FamilySize)
 
 # print the contingency table for the FamilySize
+table(titanic.all$FamilySize)
 
 # compute the proportion of FamilySize >= 3 in all passangers
+sum(titanic.all$FamilySize>=3)/length(titanic.all$FamilySize)
 
 # set the FamilySize to 3 to all observations where FamilySize > 3
+titanic.all$FamilySize[titanic.all$FamilySize > 3] <- 3
 
 # transform FamilySize into factor
-
+titanic.all$FamilySize <- factor(titanic.all$FamilySize, 
+                                 levels = 0:3, 
+                                 labels = c(0:2, "3+"))
+table(titanic.all$FamilySize)
 
 # plot the FamilySize vs. Survived
-
+ggplot(titanic.all[is.na(titanic.all$Survived) == FALSE,], 
+       aes(x = FamilySize, fill = Survived)) + 
+  geom_bar(position = "dodge", width = 0.5) + 
+  theme_light()
 
 #####################################
 ## Making use of the Ticket variable
 #####################################
 
 # print a sample of Ticket values
-
+sample(titanic.all$Ticket, 20)
 
 # compute the number of distinct values of the Ticket variable
-
+length(unique(titanic.all$Ticket))
 
 # use tapply to compute the number of passengers on the same ticket
-
+ticket.count <- tapply(titanic.all$PassengerId,
+                       INDEX = titanic.all$Ticket,
+                       FUN = length)
 
 # create a data frame with ticket name and ticket count as variables
-
+ticket.count.df <- data.frame(ticket=names(ticket.count), 
+                              count=as.integer(ticket.count))
 
 # print first few rows of the new data frame
+head(ticket.count.df)
 
 # print the contingency table of the count variable
+table(ticket.count.df$count)
 
 # merge titanic.all and ticket.count.df datasets on the Ticket variable
-
+titanic.all <- merge(x = titanic.all, y = ticket.count.df,
+                     by.x = "Ticket", by.y = "ticket")
 
 # change the name of the newly added column to PersonPerTicket
+colnames(titanic.all)[16] <- "PersonPerTicket"
 
 # print the contingency table of the PersonPerTicket variable
+table(titanic.all$PersonPerTicket)
 
 # set the PersonPerTicket to 4 to all observations where PersonPerTicket > 4
+titanic.all$PersonPerTicket[titanic.all$PersonPerTicket > 4] <- 4
 
 # convert PersonPerTicket to factor
-
+titanic.all$PersonPerTicket <- factor(titanic.all$PersonPerTicket, 
+                                      levels = 1:4, 
+                                      labels = c(1:3, "4+"))
 
 # print the contingency table for the PersonPerTicket
-
+table(titanic.all$PersonPerTicket)
 
 # print the contingency table for the PersonPerTicket vs. FamilySize
+xtabs(~ PersonPerTicket + FamilySize, data = titanic.all)
 
 # plot all survived passangers (without NAs)
-
+ggplot(titanic.all[!is.na(titanic.all$Survived),], 
+       aes(x = PersonPerTicket, fill=Survived)) + 
+  geom_bar(position = "dodge", width = 0.5) + 
+  theme_minimal()
 
 # plot the PersonPerTicket vs. Survived using proportions
-
+ggplot(titanic.all[!is.na(titanic.all$Survived),],
+                   aes(x = PersonPerTicket, fill=Survived)) +
+  geom_bar(width = 0.5, position = "fill") + 
+  ylab("Proportions") +
+  theme_minimal() 
 
 ##################################
 # Save the augmented data set
 ##################################
 
 # split into train and test set based on whether the Survived is present
-
+ttrain.new <- titanic.all[!is.na(titanic.all$Survived),]
+ttest.new <- titanic.all[is.na(titanic.all$Survived),]
 
 # save both data sets to a file
-
+saveRDS(ttrain.new, file = "data/train_new.RData")
+saveRDS(ttest.new, file = "data/test_new.RData")
