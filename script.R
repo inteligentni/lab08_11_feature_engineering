@@ -191,44 +191,60 @@ ggplot(data = titanic.train,
   geom_density(alpha = 0.5) +
   theme_minimal()
 
+
 ######################
 # Feature engineering
 ######################
 
 # add the Survived variable to the test set
-
+titanic.test$Survived <- NA
 
 # transform the Pclass variable into factor (in the test set)
-
-
+titanic.test$Pclass <- factor(x = titanic.test$Pclass, 
+                              levels = c(1,2,3),
+                              labels = c("1st", "2nd", "3rd"))
 
 # transform the Sex variable into factor (in the test set)
-
+titanic.test$Sex <- factor(titanic.test$Sex)
 
 # merge train and test sets
-
+titanic.all <- rbind(titanic.train, titanic.test)
 
 ###################################
 ## Creating the FamilySize variable
 ###################################
 
-# examine the values of the SibSp and Parch variables
+# examine the values of the SibSp variable
+summary(titanic.all$SibSp)
 
+table(titanic.all$SibSp)
+
+# examine the values of the Parch variable
+summary(titanic.all$Parch)
+
+table(titanic.all$Parch)
 
 # create a new variable FamilySize based on the SibSp and Parch values
-
+titanic.all$FamilySize <- titanic.all$SibSp + titanic.all$Parch
+summary(titanic.all$FamilySize)
 
 # print the contingency table for the FamilySize
-
+table(titanic.all$FamilySize)
 
 # compute the proportion of FamilySize >= 3 in all passangers
-
+sum(titanic.all$FamilySize>=3)/length(titanic.all$FamilySize)
 
 # set the FamilySize to 3 to all observations where FamilySize > 3
-
+titanic.all$FamilySize[titanic.all$FamilySize > 3] <- 3
 
 # transform FamilySize into factor
-
-
+titanic.all$FamilySize <- factor(titanic.all$FamilySize, 
+                                 levels = 0:3, 
+                                 labels = c(0:2, "3+"))
+table(titanic.all$FamilySize)
 
 # plot the FamilySize vs. Survived
+ggplot(titanic.all[is.na(titanic.all$Survived) == FALSE,], 
+       aes(x = FamilySize, fill = Survived)) + 
+  geom_bar(position = "dodge", width = 0.5) + 
+  theme_light()
